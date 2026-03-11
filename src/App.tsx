@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Activity, AlertTriangle, Globe, Maximize2, Monitor, Plus, RefreshCw, Trash2 } from 'lucide-react';
+import { Activity, AlertTriangle, Camera, Droplet, Gauge, Globe, Maximize2, Monitor, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 
 // Translations
@@ -27,6 +27,14 @@ const translations = {
     noDevices: "NO DATA FEEDS DETECTED. ADD A DEVICE TO COMMENCE MONITORING.",
     addDeviceTitle: "ADD NEW DEVICE",
     systemTime: "SYS.TIME",
+    liveCamera: "CAMERA KHU VỰC",
+    chemicals: "KHO HÓA CHẤT",
+    systemMetrics: "CHỈ SỐ HỆ THỐNG",
+    acid6: "AXIT 6%",
+    acid60: "AXIT 60%",
+    pac: "PAC",
+    polymer: "POLYMER",
+    flowRate: "LƯU LƯỢNG",
   },
   ja: {
     title: "WORLD MONITOR - 排水処理",
@@ -47,6 +55,14 @@ const translations = {
     noDevices: "データフィードが検出されません。監視を開始するにはデバイスを追加してください。",
     addDeviceTitle: "新規デバイス追加",
     systemTime: "システム時刻",
+    liveCamera: "エリアカメラ",
+    chemicals: "化学薬品保管",
+    systemMetrics: "システム指標",
+    acid6: "酸 6%",
+    acid60: "酸 60%",
+    pac: "PAC",
+    polymer: "ポリマー",
+    flowRate: "流量",
   }
 };
 
@@ -129,10 +145,10 @@ export default function App() {
   };
 
   // Calculate dynamic grid layout to fit all screens in one view
-  const getGridClass = (count: number) => {
-    if (count === 1) return "grid-cols-1 grid-rows-1";
-    if (count === 2) return "grid-cols-2 grid-rows-1";
-    if (count === 3 || count === 4) return "grid-cols-2 grid-rows-2";
+  // We add 4 to the count because we have 3 fixed widgets (Camera, Chemicals, Metrics) + 1 Add Button Card
+  const getGridClass = (deviceCount: number) => {
+    const count = deviceCount + 4; 
+    if (count <= 4) return "grid-cols-2 grid-rows-2";
     if (count === 5 || count === 6) return "grid-cols-3 grid-rows-2";
     if (count >= 7 && count <= 9) return "grid-cols-3 grid-rows-3";
     if (count >= 10 && count <= 12) return "grid-cols-4 grid-rows-3";
@@ -171,6 +187,7 @@ export default function App() {
               <button 
                 onClick={() => setIsModalOpen(true)}
                 className="flex items-center gap-1.5 h-6 px-2 bg-transparent hover:bg-[#2a2a2a] border border-[#2a2a2a] text-[10px] font-bold tracking-wider text-gray-400 hover:text-gray-200 transition-colors"
+                title={t.addScreen}
               >
                 <Plus className="w-3 h-3" />
                 <span className="hidden sm:inline">{t.addScreen}</span>
@@ -182,30 +199,38 @@ export default function App() {
 
       {/* Main Content - Dynamic Grid */}
       <main className="flex-1 p-1 overflow-hidden">
-        {devices.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center px-4 text-center border border-[#2a2a2a] bg-[#141414]">
-            <Monitor className="w-12 h-12 mb-4 text-[#2a2a2a]" />
-            <h3 className="text-xs font-bold tracking-widest text-gray-500 mb-6 uppercase">{t.noDevices}</h3>
-            <button 
-              onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-2 bg-transparent hover:bg-[#2a2a2a] border border-[#2a2a2a] text-gray-300 px-4 py-2 text-xs font-bold tracking-wider transition-colors uppercase"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              {t.addScreen}
-            </button>
-          </div>
-        ) : (
-          <div className={`h-full w-full grid gap-1 ${getGridClass(devices.length)}`}>
-            {devices.map(device => (
-              <DeviceCard 
-                key={device.id} 
-                device={device} 
-                onDelete={() => deleteDevice(device.id)} 
-                t={t} 
-              />
-            ))}
-          </div>
-        )}
+        <div className={`h-full w-full grid gap-1 ${getGridClass(devices.length)}`}>
+          
+          {/* Fixed Widget 1: Live Camera */}
+          <CameraWidget t={t} />
+
+          {/* Fixed Widget 2: Chemical Levels */}
+          <ChemicalWidget t={t} />
+
+          {/* Fixed Widget 3: System Metrics */}
+          <MetricsWidget t={t} />
+
+          {/* User Added Devices */}
+          {devices.map(device => (
+            <DeviceCard 
+              key={device.id} 
+              device={device} 
+              onDelete={() => deleteDevice(device.id)} 
+              t={t} 
+            />
+          ))}
+
+          {/* Add Device Card */}
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex flex-col items-center justify-center gap-3 bg-[#0a0a0a] hover:bg-[#141414] border border-dashed border-[#2a2a2a] hover:border-gray-500 text-gray-500 hover:text-gray-300 transition-all min-h-0 min-w-0 h-full w-full group"
+          >
+            <div className="w-10 h-10 rounded-full border border-dashed border-gray-500 group-hover:border-gray-300 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Plus className="w-5 h-5" />
+            </div>
+            <span className="text-[10px] font-bold tracking-widest uppercase">{t.addScreen}</span>
+          </button>
+        </div>
       </main>
 
       {/* Add Device Modal */}
@@ -219,6 +244,115 @@ export default function App() {
     </div>
   );
 }
+
+// --- FIXED WIDGETS ---
+
+function CameraWidget({ t }: { t: any }) {
+  return (
+    <div className="flex flex-col bg-[#141414] border border-[#2a2a2a] min-h-0 min-w-0 h-full w-full">
+      <div className="h-[36px] px-3 flex items-center justify-between border-b border-[#1a1a1a] flex-none">
+        <div className="flex items-center gap-2">
+          <Camera className="w-3.5 h-3.5 text-gray-500" />
+          <h3 className="font-bold text-xs tracking-wider text-gray-200 uppercase">{t.liveCamera}</h3>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_5px_#ef4444]"></div>
+          <span className="text-[10px] text-red-500 tracking-widest font-bold">LIVE</span>
+        </div>
+      </div>
+      <div className="flex-1 relative bg-[#0a0a0a] min-h-0 p-1">
+        <div className="absolute inset-1 border border-[#2a2a2a] overflow-hidden bg-black relative">
+          {/* Mock Camera Feed Image */}
+          <img 
+            src="https://images.unsplash.com/photo-1581092160562-40aa08e78837?q=80&w=800&auto=format&fit=crop" 
+            alt="Live Camera" 
+            className="w-full h-full object-cover opacity-50 grayscale"
+            referrerPolicy="no-referrer"
+          />
+          {/* Scanline Overlay */}
+          <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px]"></div>
+          {/* OSD (On-Screen Display) */}
+          <div className="absolute top-2 left-2 text-[10px] text-green-400 font-mono bg-black/60 px-1 border border-green-900/50">
+            CAM-01: MAIN_TANK
+          </div>
+          <div className="absolute bottom-2 right-2 text-[10px] text-white font-mono bg-black/60 px-1">
+            REC 1080p 30FPS
+          </div>
+          {/* Crosshair */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-30">
+            <div className="w-8 h-8 border border-white rounded-full"></div>
+            <div className="absolute w-12 h-[1px] bg-white"></div>
+            <div className="absolute h-12 w-[1px] bg-white"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChemicalWidget({ t }: { t: any }) {
+  return (
+    <div className="flex flex-col bg-[#141414] border border-[#2a2a2a] min-h-0 min-w-0 h-full w-full">
+      <div className="h-[36px] px-3 flex items-center gap-2 border-b border-[#1a1a1a] flex-none">
+        <Droplet className="w-3.5 h-3.5 text-gray-500" />
+        <h3 className="font-bold text-xs tracking-wider text-gray-200 uppercase">{t.chemicals}</h3>
+      </div>
+      <div className="flex-1 p-3 flex flex-col justify-between overflow-hidden gap-2">
+        <ProgressBar label={t.acid6} value={78} color="bg-green-500" />
+        <ProgressBar label={t.acid60} value={24} color="bg-red-500" warning />
+        <ProgressBar label={t.pac} value={85} color="bg-blue-500" />
+        <ProgressBar label={t.polymer} value={60} color="bg-purple-500" />
+      </div>
+    </div>
+  );
+}
+
+function ProgressBar({ label, value, color, warning = false }: { label: string, value: number, color: string, warning?: boolean }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex justify-between items-end">
+        <span className={`text-[10px] font-bold tracking-wider uppercase ${warning ? 'text-red-400 animate-pulse' : 'text-gray-400'}`}>
+          {label} {warning && ' (LOW)'}
+        </span>
+        <span className="text-[10px] text-gray-200 font-mono">{value}%</span>
+      </div>
+      <div className="w-full h-1.5 bg-[#0a0a0a] border border-[#2a2a2a] overflow-hidden">
+        <div className={`h-full ${color}`} style={{ width: `${value}%` }}></div>
+      </div>
+    </div>
+  );
+}
+
+function MetricsWidget({ t }: { t: any }) {
+  return (
+    <div className="flex flex-col bg-[#141414] border border-[#2a2a2a] min-h-0 min-w-0 h-full w-full">
+      <div className="h-[36px] px-3 flex items-center gap-2 border-b border-[#1a1a1a] flex-none">
+        <Gauge className="w-3.5 h-3.5 text-gray-500" />
+        <h3 className="font-bold text-xs tracking-wider text-gray-200 uppercase">{t.systemMetrics}</h3>
+      </div>
+      <div className="flex-1 p-2 grid grid-cols-2 grid-rows-2 gap-2 overflow-hidden">
+        <MetricBox label="pH (IN)" value="4.2" unit="" color="text-red-400" />
+        <MetricBox label="pH (OUT)" value="7.4" unit="" color="text-green-400" />
+        <MetricBox label="COD" value="120" unit="mg/L" color="text-yellow-400" />
+        <MetricBox label={t.flowRate} value="350" unit="m³/h" color="text-blue-400" />
+      </div>
+    </div>
+  );
+}
+
+function MetricBox({ label, value, unit, color }: { label: string, value: string, unit: string, color: string }) {
+  return (
+    <div className="bg-[#0a0a0a] border border-[#2a2a2a] p-2 flex flex-col justify-between">
+      <span className="text-[9px] text-gray-500 tracking-wider uppercase">{label}</span>
+      <div className="flex items-baseline gap-1">
+        <span className={`text-xl sm:text-2xl font-bold ${color}`}>{value}</span>
+        {unit && <span className="text-[9px] text-gray-600">{unit}</span>}
+      </div>
+    </div>
+  );
+}
+
+// --- USER DEVICE CARD ---
 
 function DeviceCard({ device, onDelete, t }: { device: Device, onDelete: () => void, t: any }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -260,7 +394,7 @@ function DeviceCard({ device, onDelete, t }: { device: Device, onDelete: () => v
         <div className="flex items-center gap-3 min-w-0">
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-600"></div>
+              <div className="w-1.5 h-1.5 rounded-full bg-green-600 shadow-[0_0_5px_#16a34a]"></div>
               <h3 className="font-bold text-xs tracking-wider text-gray-200 uppercase truncate" title={device.name}>{device.name}</h3>
             </div>
           </div>
@@ -409,4 +543,3 @@ function AddDeviceModal({ onClose, onSave, t }: { onClose: () => void, onSave: (
     </div>
   );
 }
-
