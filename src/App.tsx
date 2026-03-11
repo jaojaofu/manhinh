@@ -9,27 +9,27 @@ import React, { useEffect, useRef, useState } from 'react';
 // Translations
 const translations = {
   vi: {
-    title: "HỆ THỐNG SCADA - XỬ LÝ NƯỚC THẢI",
-    dashboard: "BẢNG ĐIỀU KHIỂN",
-    addScreen: "THÊM MÀN HÌNH",
-    deviceName: "TÊN THIẾT BỊ",
-    ipAddress: "ĐỊA CHỈ IP",
-    port: "CỔNG (TÙY CHỌN)",
-    description: "MÔ TẢ",
-    save: "LƯU",
-    cancel: "HỦY",
-    reload: "TẢI LẠI",
-    delete: "XÓA",
-    fullscreen: "TOÀN MÀN HÌNH",
-    connectionStatus: "TRẠNG THÁI",
-    online: "KẾT NỐI",
-    offline: "MẤT KẾT NỐI",
-    noDevices: "HỆ THỐNG TRỐNG. VUI LÒNG THÊM THIẾT BỊ ĐỂ GIÁM SÁT.",
-    addDeviceTitle: "THÊM THIẾT BỊ MỚI",
-    systemTime: "THỜI GIAN HỆ THỐNG",
+    title: "WORLD MONITOR - WASTEWATER",
+    dashboard: "DASHBOARD",
+    addScreen: "ADD SCREEN",
+    deviceName: "DEVICE NAME",
+    ipAddress: "IP ADDRESS",
+    port: "PORT (OPTIONAL)",
+    description: "DESCRIPTION",
+    save: "SAVE",
+    cancel: "CANCEL",
+    reload: "RELOAD",
+    delete: "DELETE",
+    fullscreen: "FULLSCREEN",
+    connectionStatus: "STATUS",
+    online: "ONLINE",
+    offline: "OFFLINE",
+    noDevices: "NO DATA FEEDS DETECTED. ADD A DEVICE TO COMMENCE MONITORING.",
+    addDeviceTitle: "ADD NEW DEVICE",
+    systemTime: "SYS.TIME",
   },
   ja: {
-    title: "SCADAシステム - 排水処理",
+    title: "WORLD MONITOR - 排水処理",
     dashboard: "ダッシュボード",
     addScreen: "画面追加",
     deviceName: "デバイス名",
@@ -44,7 +44,7 @@ const translations = {
     connectionStatus: "状態",
     online: "オンライン",
     offline: "オフライン",
-    noDevices: "システムは空です。監視するデバイスを追加してください。",
+    noDevices: "データフィードが検出されません。監視を開始するにはデバイスを追加してください。",
     addDeviceTitle: "新規デバイス追加",
     systemTime: "システム時刻",
   }
@@ -90,7 +90,7 @@ export default function App() {
       setLang(savedLang);
     }
     
-    // Force dark mode for SCADA
+    // Force dark mode
     document.documentElement.classList.add('dark');
   }, []);
 
@@ -115,7 +115,7 @@ export default function App() {
   };
 
   const deleteDevice = (id: string) => {
-    if (window.confirm(lang === 'vi' ? 'XÁC NHẬN XÓA THIẾT BỊ NÀY?' : 'このデバイスを削除してもよろしいですか？')) {
+    if (window.confirm(lang === 'vi' ? 'DELETE THIS DEVICE?' : 'このデバイスを削除しますか？')) {
       setDevices(devices.filter(d => d.id !== id));
     }
   };
@@ -125,7 +125,7 @@ export default function App() {
   };
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    return date.toLocaleDateString('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '-');
   };
 
   // Calculate dynamic grid layout to fit all screens in one view
@@ -142,42 +142,37 @@ export default function App() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-[#121212] text-gray-300 font-sans selection:bg-blue-500/30 overflow-hidden">
-      {/* SCADA Top Bar */}
-      <header className="flex-none z-30 bg-[#1e1e1e] border-b-2 border-[#333] shadow-md">
-        <div className="px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-8 h-8 bg-blue-900/50 border border-blue-500/50 rounded text-blue-400">
-              <Activity className="w-5 h-5" />
-            </div>
-            <h1 className="text-lg font-bold tracking-widest text-gray-100 hidden sm:block">{t.title}</h1>
-            <h1 className="text-lg font-bold tracking-widest text-gray-100 sm:hidden">{t.dashboard}</h1>
+    <div className="h-screen flex flex-col bg-[#0a0a0a] text-gray-300 font-mono selection:bg-[#2a2a2a] overflow-hidden">
+      {/* World Monitor Style Header */}
+      <header className="flex-none z-30 bg-[#141414] border-b border-[#2a2a2a] h-[40px]">
+        <div className="px-4 h-full flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Activity className="w-4 h-4 text-gray-400" />
+            <h1 className="text-xs font-bold tracking-widest text-gray-200 uppercase hidden sm:block">{t.title}</h1>
+            <h1 className="text-xs font-bold tracking-widest text-gray-200 uppercase sm:hidden">{t.dashboard}</h1>
           </div>
           
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4">
             {/* System Time */}
-            <div className="hidden md:flex flex-col items-end justify-center bg-[#111] border border-[#333] px-3 py-1 rounded">
-              <div className="text-[10px] text-gray-500 font-bold tracking-wider mb-0.5">{t.systemTime}</div>
-              <div className="flex items-center gap-2 font-mono text-green-400 text-sm leading-none">
-                <span>{formatDate(currentTime)}</span>
-                <span>{formatTime(currentTime)}</span>
-              </div>
+            <div className="hidden md:flex items-center gap-2 text-[10px] text-gray-400">
+              <span className="uppercase tracking-wider">{t.systemTime}:</span>
+              <span className="text-gray-200">{formatDate(currentTime)} {formatTime(currentTime)}</span>
             </div>
 
             <div className="flex items-center gap-2">
               <button 
                 onClick={toggleLanguage}
-                className="flex items-center gap-2 px-3 py-1.5 bg-[#252526] hover:bg-[#2d2d30] border border-[#3e3e42] rounded text-xs font-bold tracking-wider text-gray-300 transition-colors"
+                className="flex items-center gap-1.5 h-6 px-2 bg-transparent hover:bg-[#2a2a2a] border border-[#2a2a2a] text-[10px] font-bold tracking-wider text-gray-400 hover:text-gray-200 transition-colors"
               >
-                <Globe className="w-3.5 h-3.5" />
+                <Globe className="w-3 h-3" />
                 <span>VI | JA</span>
               </button>
               
               <button 
                 onClick={() => setIsModalOpen(true)}
-                className="flex items-center gap-2 bg-blue-700 hover:bg-blue-600 border border-blue-500 text-white px-3 py-1.5 rounded text-xs font-bold tracking-wider transition-colors shadow-[0_0_10px_rgba(29,78,216,0.3)]"
+                className="flex items-center gap-1.5 h-6 px-2 bg-transparent hover:bg-[#2a2a2a] border border-[#2a2a2a] text-[10px] font-bold tracking-wider text-gray-400 hover:text-gray-200 transition-colors"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="w-3 h-3" />
                 <span className="hidden sm:inline">{t.addScreen}</span>
               </button>
             </div>
@@ -186,21 +181,21 @@ export default function App() {
       </header>
 
       {/* Main Content - Dynamic Grid */}
-      <main className="flex-1 p-2 sm:p-4 overflow-hidden">
+      <main className="flex-1 p-1 overflow-hidden">
         {devices.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center px-4 text-center border-2 border-dashed border-[#333] bg-[#1a1a1a] rounded-lg">
-            <AlertTriangle className="w-16 h-16 mb-4 text-yellow-600/50" />
-            <h3 className="text-lg font-bold tracking-widest text-gray-400 mb-6">{t.noDevices}</h3>
+          <div className="h-full flex flex-col items-center justify-center px-4 text-center border border-[#2a2a2a] bg-[#141414]">
+            <Monitor className="w-12 h-12 mb-4 text-[#2a2a2a]" />
+            <h3 className="text-xs font-bold tracking-widest text-gray-500 mb-6 uppercase">{t.noDevices}</h3>
             <button 
               onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-2 bg-[#252526] hover:bg-[#2d2d30] border border-[#3e3e42] text-gray-300 px-6 py-2.5 rounded font-bold tracking-wider transition-colors"
+              className="flex items-center gap-2 bg-transparent hover:bg-[#2a2a2a] border border-[#2a2a2a] text-gray-300 px-4 py-2 text-xs font-bold tracking-wider transition-colors uppercase"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-3.5 h-3.5" />
               {t.addScreen}
             </button>
           </div>
         ) : (
-          <div className={`h-full w-full grid gap-2 sm:gap-4 ${getGridClass(devices.length)}`}>
+          <div className={`h-full w-full grid gap-1 ${getGridClass(devices.length)}`}>
             {devices.map(device => (
               <DeviceCard 
                 key={device.id} 
@@ -258,67 +253,60 @@ function DeviceCard({ device, onDelete, t }: { device: Device, onDelete: () => v
   return (
     <div 
       ref={cardRef}
-      className={`flex flex-col bg-[#1e1e1e] border border-[#333] shadow-lg min-h-0 min-w-0 ${isFullscreen ? 'fixed inset-0 z-50' : 'h-full w-full rounded-sm'}`}
+      className={`flex flex-col bg-[#141414] border border-[#2a2a2a] min-h-0 min-w-0 ${isFullscreen ? 'fixed inset-0 z-50' : 'h-full w-full rounded-none'}`}
     >
-      {/* SCADA Panel Header */}
-      <div className="px-2 py-1.5 sm:px-3 sm:py-2 flex items-center justify-between bg-[#252526] border-b border-[#333] flex-none">
-        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-          {/* Status LED */}
-          <div className="hidden sm:flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 bg-[#111] border border-[#333] rounded-sm shadow-inner flex-none">
-            <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]"></div>
-          </div>
-          
+      {/* Panel Header */}
+      <div className="h-[36px] px-3 flex items-center justify-between border-b border-[#1a1a1a] bg-[#141414] flex-none">
+        <div className="flex items-center gap-3 min-w-0">
           <div className="flex flex-col min-w-0">
-            <h3 className="font-bold text-xs sm:text-sm tracking-wider text-gray-100 uppercase truncate" title={device.name}>{device.name}</h3>
-            <div className="hidden sm:flex items-center gap-3 text-[10px] sm:text-[11px] mt-0.5">
-              <span className="font-mono text-blue-400 bg-[#111] px-1.5 py-0.5 rounded-sm border border-[#333] truncate">
-                {device.ip}{device.port ? `:${device.port}` : ''}
-              </span>
-              <span className="font-bold tracking-wider text-green-500 uppercase flex-none">{t.online}</span>
+            <div className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-green-600"></div>
+              <h3 className="font-bold text-xs tracking-wider text-gray-200 uppercase truncate" title={device.name}>{device.name}</h3>
             </div>
           </div>
         </div>
         
-        <div className="flex items-center gap-1 sm:gap-1.5 flex-none">
+        <div className="flex items-center gap-1 flex-none">
+          <span className="hidden sm:inline-block text-[10px] text-gray-500 mr-2 truncate">
+            {device.ip}{device.port ? `:${device.port}` : ''}
+          </span>
           <button 
             onClick={handleReload}
-            className="p-1 sm:p-1.5 bg-[#1e1e1e] hover:bg-[#2d2d30] border border-[#333] rounded-sm text-gray-400 hover:text-gray-200 transition-colors"
+            className="p-1 text-gray-500 hover:text-gray-200 hover:bg-[#2a2a2a] transition-colors"
             title={t.reload}
           >
-            <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4" />
+            <RefreshCw className="w-3.5 h-3.5" />
           </button>
           <button 
             onClick={toggleFullscreen}
-            className="p-1 sm:p-1.5 bg-[#1e1e1e] hover:bg-[#2d2d30] border border-[#333] rounded-sm text-gray-400 hover:text-gray-200 transition-colors"
+            className="p-1 text-gray-500 hover:text-gray-200 hover:bg-[#2a2a2a] transition-colors"
             title={t.fullscreen}
           >
-            <Maximize2 className="w-3 h-3 sm:w-4 sm:h-4" />
+            <Maximize2 className="w-3.5 h-3.5" />
           </button>
           {!isFullscreen && (
             <button 
               onClick={onDelete}
-              className="p-1 sm:p-1.5 bg-[#1e1e1e] hover:bg-red-900/30 border border-[#333] hover:border-red-900/50 rounded-sm text-gray-500 hover:text-red-400 transition-colors ml-1 sm:ml-2"
+              className="p-1 text-gray-500 hover:text-red-400 hover:bg-[#2a2a2a] transition-colors ml-1"
               title={t.delete}
             >
-              <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+              <Trash2 className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
       </div>
       
       {/* Iframe Container */}
-      <div className="flex-1 relative bg-[#0a0a0a] p-0.5 sm:p-1 min-h-0">
-        <div className="absolute inset-0.5 sm:inset-1 border border-[#333] bg-black">
-          <iframe
-            key={iframeKey}
-            ref={iframeRef}
-            src={url}
-            className="w-full h-full border-0"
-            title={`HMI ${device.name}`}
-            sandbox="allow-scripts allow-same-origin allow-forms"
-            loading="lazy"
-          />
-        </div>
+      <div className="flex-1 relative bg-[#0a0a0a] min-h-0">
+        <iframe
+          key={iframeKey}
+          ref={iframeRef}
+          src={url}
+          className="absolute inset-0 w-full h-full border-0"
+          title={`HMI ${device.name}`}
+          sandbox="allow-scripts allow-same-origin allow-forms"
+          loading="lazy"
+        />
       </div>
     </div>
   );
@@ -338,16 +326,16 @@ function AddDeviceModal({ onClose, onSave, t }: { onClose: () => void, onSave: (
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="w-full max-w-md bg-[#1e1e1e] border border-[#444] shadow-2xl rounded-sm overflow-hidden">
+      <div className="w-full max-w-md bg-[#141414] border border-[#2a2a2a] rounded-none overflow-hidden shadow-2xl">
         {/* Modal Header */}
-        <div className="px-5 py-3 bg-[#252526] border-b border-[#444] flex items-center gap-3">
-          <Monitor className="w-5 h-5 text-blue-400" />
-          <h2 className="text-sm font-bold tracking-widest text-gray-100 uppercase">{t.addDeviceTitle}</h2>
+        <div className="h-[40px] px-4 border-b border-[#1a1a1a] flex items-center gap-3">
+          <Monitor className="w-4 h-4 text-gray-400" />
+          <h2 className="text-xs font-bold tracking-widest text-gray-200 uppercase">{t.addDeviceTitle}</h2>
         </div>
         
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+        <form onSubmit={handleSubmit} className="p-4 space-y-4">
           <div>
-            <label className="block text-[11px] font-bold tracking-wider text-gray-400 mb-1.5 uppercase">
+            <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-wider">
               {t.deviceName} <span className="text-red-500">*</span>
             </label>
             <input
@@ -355,14 +343,14 @@ function AddDeviceModal({ onClose, onSave, t }: { onClose: () => void, onSave: (
               required
               value={name}
               onChange={e => setName(e.target.value)}
-              className="w-full px-3 py-2 bg-[#111] border border-[#333] focus:border-blue-500 text-gray-100 font-mono text-sm focus:outline-none transition-colors rounded-sm"
+              className="w-full px-3 py-1.5 bg-[#0a0a0a] border border-[#2a2a2a] focus:border-gray-500 text-gray-200 text-xs focus:outline-none transition-colors rounded-none"
               placeholder="PUMP_STATION_01"
             />
           </div>
           
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-3">
             <div className="col-span-2">
-              <label className="block text-[11px] font-bold tracking-wider text-gray-400 mb-1.5 uppercase">
+              <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-wider">
                 {t.ipAddress} <span className="text-red-500">*</span>
               </label>
               <input
@@ -370,48 +358,48 @@ function AddDeviceModal({ onClose, onSave, t }: { onClose: () => void, onSave: (
                 required
                 value={ip}
                 onChange={e => setIp(e.target.value)}
-                className="w-full px-3 py-2 bg-[#111] border border-[#333] focus:border-blue-500 text-gray-100 font-mono text-sm focus:outline-none transition-colors rounded-sm"
+                className="w-full px-3 py-1.5 bg-[#0a0a0a] border border-[#2a2a2a] focus:border-gray-500 text-gray-200 text-xs focus:outline-none transition-colors rounded-none"
                 placeholder="192.168.1.100"
               />
             </div>
             <div>
-              <label className="block text-[11px] font-bold tracking-wider text-gray-400 mb-1.5 uppercase">
+              <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-wider">
                 {t.port}
               </label>
               <input
                 type="text"
                 value={port}
                 onChange={e => setPort(e.target.value)}
-                className="w-full px-3 py-2 bg-[#111] border border-[#333] focus:border-blue-500 text-gray-100 font-mono text-sm focus:outline-none transition-colors rounded-sm"
+                className="w-full px-3 py-1.5 bg-[#0a0a0a] border border-[#2a2a2a] focus:border-gray-500 text-gray-200 text-xs focus:outline-none transition-colors rounded-none"
                 placeholder="8080"
               />
             </div>
           </div>
           
           <div>
-            <label className="block text-[11px] font-bold tracking-wider text-gray-400 mb-1.5 uppercase">
+            <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-wider">
               {t.description}
             </label>
             <textarea
               value={description}
               onChange={e => setDescription(e.target.value)}
-              rows={3}
-              className="w-full px-3 py-2 bg-[#111] border border-[#333] focus:border-blue-500 text-gray-100 font-mono text-sm focus:outline-none transition-colors resize-none rounded-sm"
+              rows={2}
+              className="w-full px-3 py-1.5 bg-[#0a0a0a] border border-[#2a2a2a] focus:border-gray-500 text-gray-200 text-xs focus:outline-none transition-colors resize-none rounded-none"
               placeholder="MAIN_TREATMENT_AREA"
             />
           </div>
           
-          <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-[#333]">
+          <div className="flex items-center justify-end gap-2 mt-4 pt-4 border-t border-[#1a1a1a]">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-[#252526] hover:bg-[#2d2d30] border border-[#444] text-gray-300 text-xs font-bold tracking-wider uppercase rounded-sm transition-colors"
+              className="px-3 py-1.5 bg-transparent hover:bg-[#2a2a2a] border border-[#2a2a2a] text-gray-400 text-[10px] font-bold tracking-wider uppercase rounded-none transition-colors"
             >
               {t.cancel}
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-700 hover:bg-blue-600 border border-blue-500 text-white text-xs font-bold tracking-wider uppercase rounded-sm transition-colors shadow-[0_0_10px_rgba(29,78,216,0.2)]"
+              className="px-3 py-1.5 bg-[#2a2a2a] hover:bg-[#3a3a3a] border border-[#3a3a3a] text-gray-200 text-[10px] font-bold tracking-wider uppercase rounded-none transition-colors"
             >
               {t.save}
             </button>
