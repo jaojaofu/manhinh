@@ -1,0 +1,5 @@
+{
+  "name": "Wastewater Treatment Dashboard",
+  "description": "A modern, bilingual web application for monitoring wastewater treatment systems via HMI web interfaces.",
+  "requestFramePermissions": []
+}
